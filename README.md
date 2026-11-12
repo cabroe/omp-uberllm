@@ -33,9 +33,15 @@ cp models.yml ~/.omp/agent/models.yml
 ### Key (either way)
 
 ```sh
-printf 'UBERLLM_API_KEY=ull_…\n' >> ~/.omp/agent/.env
-chmod 600 ~/.omp/agent/.env
+mkdir -p ~/.omp/agent && umask 077
+touch ~/.omp/agent/.env
+sed -i '/^UBERLLM_API_KEY=/d' ~/.omp/agent/.env      # replace, never add a second line
+read -rsp 'UberLLM key: ' KEY && printf 'UBERLLM_API_KEY=%s\n' "$KEY" >> ~/.omp/agent/.env
 ```
+
+The `sed` is not cosmetic. omp's dotenv loader lets the **last** `UBERLLM_API_KEY=` line win, so an
+appended placeholder (`echo 'UBERLLM_API_KEY=ull_…' >> …`) silently replaces a working key, and every
+request fails with `Header 'Authorization' has invalid value` — reproduced. Write one line only.
 
 `apiKey: UBERLLM_API_KEY` and the extension's `apiKey` are environment-variable references, not the
 key. omp loads `~/.omp/agent/.env`, `~/.omp/.env`, `~/.env` and `<project>/.env`; a non-empty shell

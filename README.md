@@ -1,63 +1,30 @@
 # omp-uberllm
 
 [UberLLM](https://uberllm.dev) as a model provider for [omp](https://github.com/can1357/oh-my-pi),
-in the two shapes omp supports:
-
-| | what it is | what it adds |
-| --- | --- | --- |
-| **extension** (`src/`) | an omp plugin that registers provider `uberllm` | live `/v1/models` roster, prepaid balance in `/usage`, no regeneration |
-| **`models.yml`** | declarative custom provider | works with `--no-extensions`, SDK/ACP hosts and a broken plugin; per-model override layer |
-
-Both come from one catalog read, so they cannot drift.
+shipped as an omp extension (`src/`). It registers provider `uberllm` with the live `/v1/models`
+roster, the billed prices and the prepaid balance in `/usage`.
 
 ## Install
 
-### Extension (primary)
+`omp plugin install` takes the repository as a git source; the ref is optional.
+
+| Source | Command | Installs to |
+| --- | --- | --- |
+| Git shorthand, optionally pinned | `omp plugin install 'github:org/repo#v1.4.0'` | user plugin directory |
+| Full Git URL | `omp plugin install 'https://github.com/org/repo.git#v1.4.0'` | user plugin directory |
 
 ```sh
-omp plugin link .                               # from a checkout (symlinked; private repos fine)
-omp plugin install github:cabroe/omp-uberllm    # remote, if git/bun can read the repo
-omp login uberllm                               # optional; env var works too
+omp plugin install github:cabroe/omp-uberllm
+omp login uberllm                          # optional; env var works too
 ```
 
-`omp plugin install` accepts an npm package name, `github:user/repo[#ref]`, a full git URL,
-`name@marketplace`, or a local path. A bare `owner/repo` is rejected with `Invalid package name:` —
-that shorthand is only valid for `omp plugin marketplace add`. A private repo also fails the remote
-`github:` install (`api.github.com/repos/<owner>/<repo>/tarball/` returns 404 without a token that
-bun uses), so install it from a checkout.
+A git source is fetched as a tarball from the forge, not through git's credential helper, so the
+repository has to be readable without a credential prompt — a private repo answers 404.
 
-The registration bundles the generated roster as its static fallback and refreshes it from the
-catalog at session start. `fetchDynamicModels` runs under omp's 15-second bound; if the catalog is
-down the bundled rows stay selectable.
-
-### Config (fallback / override)
-
-```sh
-mkdir -p ~/.omp/agent
-cp models.yml ~/.omp/agent/models.yml
-```
-
-### Key (either way)
-
-```sh
-echo 'UBERLLM_API_KEY=ull_…' >> ~/.omp/agent/.env
-```
-
-Replace `ull_…` with the key. Run it once per file: the loader takes the last `UBERLLM_API_KEY=` line, so a second line replaces the first.
-
-`apiKey: UBERLLM_API_KEY` and the extension's `apiKey` are environment-variable references, not the
-key. omp loads `~/.omp/agent/.env`, `~/.omp/.env`, `~/.env` and `<project>/.env`; a non-empty shell
-variable wins.
-
-### Both at once
-
-Supported and verified: with a `models.yml` present, a model that exists only in the live catalog
-still resolves in a session, so the extension's discovery merges with the file rather than replacing
-it.
-
-One caveat, measured: `omp models uberllm` lists only what the config file declares. Extension
-registrations happen during session setup, so the listing undercounts by every catalog row that
-arrived after the file was generated. Sessions see the union.
+The extension reads its key from `UBERLLM_API_KEY` (`omp login uberllm`, or the variable in the
+environment). The registration bundles the generated roster as its static fallback and refreshes it
+from the catalog at session start; `fetchDynamicModels` runs under omp's 15-second bound, so the
+bundled rows stay selectable if the catalog is down.
 
 ## Use
 

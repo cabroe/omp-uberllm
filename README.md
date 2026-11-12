@@ -33,16 +33,10 @@ cp models.yml ~/.omp/agent/models.yml
 ### Key (either way)
 
 ```sh
-mkdir -p ~/.omp/agent
-grep -q '^UBERLLM_API_KEY=' ~/.omp/agent/.env 2>/dev/null \
-  || echo 'UBERLLM_API_KEY=ull_…' >> ~/.omp/agent/.env
-chmod 600 ~/.omp/agent/.env
+echo 'UBERLLM_API_KEY=ull_…' >> ~/.omp/agent/.env
 ```
 
-Replace `ull_…` with the key. The `grep` guard is not cosmetic: omp's dotenv loader lets the **last**
-`UBERLLM_API_KEY=` line win, so a second, placeholder line silently replaces a working key and every
-request fails with `Header 'Authorization' has invalid value` — reproduced. The guard makes a re-run a
-no-op (verified); to change an existing key, edit that one line instead of appending another.
+Replace `ull_…` with the key. Run it once per file: the loader takes the last `UBERLLM_API_KEY=` line, so a second line replaces the first.
 
 `apiKey: UBERLLM_API_KEY` and the extension's `apiKey` are environment-variable references, not the
 key. omp loads `~/.omp/agent/.env`, `~/.omp/.env`, `~/.env` and `<project>/.env`; a non-empty shell

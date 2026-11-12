@@ -21,8 +21,9 @@ omp plugin install github:cabroe/omp-uberllm
 omp login uberllm                          # optional; env var works too
 ```
 
-A git source is fetched as a tarball from the forge, not through git's credential helper, so the
-repository has to be readable without a credential prompt — a private repo answers 404.
+bun fetches a GitHub source as a tarball from the forge, without git's credentials, so a private
+fork cannot be installed this way (upstream: [bun#19618](https://github.com/oven-sh/bun/issues/19618)).
+For one, install the local checkout: `omp plugin install ./path/to/checkout`.
 
 The extension reads its key from `UBERLLM_API_KEY` (`omp login uberllm`, or the variable in the
 environment). The registration bundles the generated roster as its static fallback and refreshes it

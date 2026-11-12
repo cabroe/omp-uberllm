@@ -15,9 +15,16 @@ Both come from one catalog read, so they cannot drift.
 ### Extension (primary)
 
 ```sh
-omp plugin install cabroe/omp-uberllm      # or, from a checkout: omp plugin link .
-omp login uberllm                          # optional; env var works too
+omp plugin link .                               # from a checkout (symlinked; private repos fine)
+omp plugin install github:cabroe/omp-uberllm    # remote, if git/bun can read the repo
+omp login uberllm                               # optional; env var works too
 ```
+
+`omp plugin install` accepts an npm package name, `github:user/repo[#ref]`, a full git URL,
+`name@marketplace`, or a local path. A bare `owner/repo` is rejected with `Invalid package name:` —
+that shorthand is only valid for `omp plugin marketplace add`. A private repo also fails the remote
+`github:` install (`api.github.com/repos/<owner>/<repo>/tarball/` returns 404 without a token that
+bun uses), so install it from a checkout.
 
 The registration bundles the generated roster as its static fallback and refreshes it from the
 catalog at session start. `fetchDynamicModels` runs under omp's 15-second bound; if the catalog is

@@ -10,10 +10,10 @@ roster, the billed prices and the prepaid balance in `/usage`.
 
 | Source | Command | Installs to |
 | --- | --- | --- |
-| Git shorthand, optionally pinned | `omp plugin install 'github:cabroe/omp-uberllm#v0.2.0'` | user plugin directory (`~/.omp/plugins`) |
-| Full Git URL | `omp plugin install 'https://github.com/cabroe/omp-uberllm.git#v0.2.0'` | user plugin directory (`~/.omp/plugins`) |
+| Git shorthand, optionally pinned | `omp plugin install 'github:cabroe/omp-uberllm#v0.2.1'` | user plugin directory (`~/.omp/plugins`) |
+| Full Git URL | `omp plugin install 'https://github.com/cabroe/omp-uberllm.git#v0.2.1'` | user plugin directory (`~/.omp/plugins`) |
 
-The `#v0.2.0` ref pins that tag; any tag, branch or commit id works, and leaving it off installs
+The `#v0.2.1` ref pins that tag; any tag, branch or commit id works, and leaving it off installs
 the default branch:
 
 ```sh

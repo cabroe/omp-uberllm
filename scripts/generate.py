@@ -150,21 +150,25 @@ def main(argv: list[str] | None = None) -> int:
     models = load_catalog(args.source)
     artifacts = {args.out: render_yaml(models), args.ts_out: render_ts(models)}
 
+    def label(path: Path) -> str:
+        """Repo-relative for the committed targets, absolute for a scratch --out/--ts-out."""
+        return path.relative_to(ROOT).as_posix() if path.is_relative_to(ROOT) else str(path)
+
     if args.check:
         stale = [path for path, text in artifacts.items()
                  if not path.exists() or path.read_text(encoding="utf-8") != text]
         if not stale:
-            print(f"{len(models)} models; {', '.join(str(path.relative_to(ROOT)) for path in artifacts)} are current")
+            print(f"{len(models)} models; {', '.join(label(path) for path in artifacts)} are current")
             return 0
         for path in stale:
-            print(f"{path.relative_to(ROOT)} is stale", file=sys.stderr)
+            print(f"{label(path)} is stale", file=sys.stderr)
         print("run: python3 scripts/generate.py", file=sys.stderr)
         return 1
 
     for path, text in artifacts.items():
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
-        print(f"wrote {path.relative_to(ROOT)} ({len(models)} models)")
+        print(f"wrote {label(path)} ({len(models)} models)")
     return 0
 
 

@@ -69,8 +69,6 @@ export const CATALOG: UberllmModel[] = [
 	{ id: "google/gemma-4-e2b", name: "Gemma 4 E2B", reasoning: false, input: ["text", "image"], contextWindow: 128000, maxTokens: 64000, cost: { input: 0.0036, output: 0.0072, cacheRead: 0.00054, cacheWrite: 0.0036 } },
 	{ id: "google/gemma-4-uncensored", name: "Gemma 4 Uncensored", reasoning: false, input: ["text", "image"], contextWindow: 256000, maxTokens: 128000, cost: { input: 0.13, output: 0.4, cacheRead: 0.01952, cacheWrite: 0.13 } },
 	{ id: "inception/mercury-2", name: "Mercury 2", reasoning: true, input: ["text"], contextWindow: 128000, maxTokens: 32768, cost: { input: 0.21875, output: 0.65625, cacheRead: 0.0, cacheWrite: 0.0 } },
-	{ id: "inception/mercury-2.5", name: "Inception: Mercury 2.5", reasoning: true, input: ["text"], contextWindow: 260000, maxTokens: 65536, cost: { input: 0.028, output: 0.105, cacheRead: 0.0, cacheWrite: 0.0 } },
-	{ id: "inception/mercury-3", name: "Mercury 3", reasoning: true, input: ["text"], contextWindow: 1000000, maxTokens: 131072, cost: { input: 0.105, output: 0.3675, cacheRead: 0.0, cacheWrite: 0.0 } },
 	{ id: "inclusionai/ling-3.1-flash", name: "inclusionAI: Ling 3.1 Flash", reasoning: true, input: ["text"], contextWindow: 262144, maxTokens: 131072, cost: { input: 0.045, output: 0.135, cacheRead: 0.009, cacheWrite: 0.045 } },
 	{ id: "liquid/lfm-2.5-24b-a2b", name: "LiquidAI: LFM2.5-24B-A2B", reasoning: true, input: ["text"], contextWindow: 128000, maxTokens: 8192, cost: { input: 0.047, output: 0.658, cacheRead: 0.0235, cacheWrite: 0.047 } },
 	{ id: "meta-llama/llama-3.2-3b-instruct", name: "Llama 3.2 3B", reasoning: false, input: ["text"], contextWindow: 128000, maxTokens: 4096, cost: { input: 0.0425, output: 0.2805, cacheRead: 0.006375, cacheWrite: 0.0425 } },

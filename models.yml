@@ -747,28 +747,6 @@ providers:
               output: 0.65625
               cacheRead: 0.0
               cacheWrite: 0.0
-         - id: "inception/mercury-2.5"
-           name: "Inception: Mercury 2.5"
-           reasoning: true
-           input: [text]
-           contextWindow: 260000
-           maxTokens: 65536
-           cost:
-              input: 0.028
-              output: 0.105
-              cacheRead: 0.0
-              cacheWrite: 0.0
-         - id: "inception/mercury-3"
-           name: "Mercury 3"
-           reasoning: true
-           input: [text]
-           contextWindow: 1000000
-           maxTokens: 131072
-           cost:
-              input: 0.105
-              output: 0.3675
-              cacheRead: 0.0
-              cacheWrite: 0.0
          - id: "inclusionai/ling-3.1-flash"
            name: "inclusionAI: Ling 3.1 Flash"
            reasoning: true

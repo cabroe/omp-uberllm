@@ -41,8 +41,11 @@ stay selectable if the catalog is down.
 ```sh
 omp --model uberllm/deepseek/deepseek-v4.1-flash-1017
 omp --model uberllm/anthropic/claude-sonnet-5.5
-omp config set modelRoles.default uberllm/deepseek/deepseek-v4.1-flash-1017
+omp config set modelRoles '{"default":"uberllm/deepseek/deepseek-v4.1-flash-1017"}'
 ```
+
+`modelRoles` is a record, so `omp config set` takes the whole value as JSON; a dotted
+`modelRoles.default` is rejected with `Unknown setting`.
 
 Inside a session, `/model uberllm` opens the provider's list and `/usage` shows the prepaid balance
 (`GET /v1/balance`, account-wide, marked `shared` so two keys of one account are not summed).

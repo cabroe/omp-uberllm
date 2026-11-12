@@ -18,17 +18,23 @@ the default branch:
 
 ```sh
 omp plugin install github:cabroe/omp-uberllm
-omp login uberllm                          # optional; env var works too
 ```
 
 bun fetches a GitHub source as a tarball from the forge, without git's credentials, so a private
 fork cannot be installed this way (upstream: [bun#19618](https://github.com/oven-sh/bun/issues/19618)).
 For one, install the local checkout: `omp plugin install ./path/to/checkout`.
 
-The extension reads its key from `UBERLLM_API_KEY` (`omp login uberllm`, or the variable in the
-environment). The registration bundles the generated roster as its static fallback and refreshes it
-from the catalog at session start; `fetchDynamicModels` runs under omp's 15-second bound, so the
-bundled rows stay selectable if the catalog is down.
+Provider `uberllm` is an API-key provider, so `omp login` does not list it — that command covers OAuth
+providers only. The extension reads its key from `UBERLLM_API_KEY`, taken from the shell or from
+`~/.omp/agent/.env`, which omp loads; a non-empty shell variable outranks the file:
+
+```sh
+printf 'UBERLLM_API_KEY=%s\n' "$KEY" >> ~/.omp/agent/.env
+```
+
+The registration bundles the generated roster as its static fallback and refreshes it from the
+catalog at session start; `fetchDynamicModels` runs under omp's 15-second bound, so the bundled rows
+stay selectable if the catalog is down.
 
 ## Use
 

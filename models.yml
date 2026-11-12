@@ -1,8 +1,9 @@
 # UberLLM gateway (https://api.uberllm.dev/v1), generated from the public /v1/models catalog.
 # One row per chat model that advertises tool support, with the catalog's own limits and the
 # billed prices per 1M tokens (prompt/completion/input_cache_* x 1e6, not the list prices).
-# Regenerate with `python3 scripts/generate.py`; models whose id carries a ':variant' suffix and
-# models without tool support are left out on purpose (see README).
+# Regenerate with `python3 scripts/generate.py`; the extension bundles the same rows from
+# src/catalog.generated.ts. Models without tool support and ids with a ':variant' suffix are
+# left out on purpose (see README).
 providers:
    uberllm:
       baseUrl: https://api.uberllm.dev/v1
@@ -2440,6 +2441,17 @@ providers:
               output: 0.056
               cacheRead: 0.002756
               cacheWrite: 0.002796
+         - id: "z-ai/glm-5.3-flash"
+           name: "GLM 5.3 Flash"
+           reasoning: true
+           input: [text, image]
+           contextWindow: 1048576
+           maxTokens: 131072
+           cost:
+              input: 0.002793
+              output: 0.005488
+              cacheRead: 0.0021
+              cacheWrite: 0.002793
          - id: "z-ai/glm-5.3-flashx"
            name: "Z.ai: GLM 5.3 FlashX"
            reasoning: true

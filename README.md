@@ -1,21 +1,55 @@
 # omp-uberllm
 
-[UberLLM](https://uberllm.dev) as a model provider for [omp](https://github.com/can1357/oh-my-pi):
-225 chat models behind one key, with the gateway's own context windows, output caps, modalities,
-reasoning flags and billed prices.
+[UberLLM](https://uberllm.dev) as a model provider for [omp](https://github.com/can1357/oh-my-pi),
+in the two shapes omp supports:
+
+| | what it is | what it adds |
+| --- | --- | --- |
+| **extension** (`src/`) | an omp plugin that registers provider `uberllm` | live `/v1/models` roster, prepaid balance in `/usage`, no regeneration |
+| **`models.yml`** | declarative custom provider | works with `--no-extensions`, SDK/ACP hosts and a broken plugin; per-model override layer |
+
+Both come from one catalog read, so they cannot drift.
 
 ## Install
+
+### Extension (primary)
+
+```sh
+omp plugin install cabroe/omp-uberllm      # or, from a checkout: omp plugin link .
+omp login uberllm                          # optional; env var works too
+```
+
+The registration bundles the generated roster as its static fallback and refreshes it from the
+catalog at session start. `fetchDynamicModels` runs under omp's 15-second bound; if the catalog is
+down the bundled rows stay selectable.
+
+### Config (fallback / override)
 
 ```sh
 mkdir -p ~/.omp/agent
 cp models.yml ~/.omp/agent/models.yml
+```
+
+### Key (either way)
+
+```sh
 printf 'UBERLLM_API_KEY=ull_…\n' >> ~/.omp/agent/.env
 chmod 600 ~/.omp/agent/.env
 ```
 
-`apiKey: UBERLLM_API_KEY` is an environment-variable reference, not the key: omp resolves a value
-that names an exact-case variable to that variable's value, so no secret is in this repo. omp loads
-`~/.omp/agent/.env`, `~/.omp/.env`, `~/.env` and `<project>/.env`; a non-empty shell variable wins.
+`apiKey: UBERLLM_API_KEY` and the extension's `apiKey` are environment-variable references, not the
+key. omp loads `~/.omp/agent/.env`, `~/.omp/.env`, `~/.env` and `<project>/.env`; a non-empty shell
+variable wins.
+
+### Both at once
+
+Supported and verified: with a `models.yml` present, a model that exists only in the live catalog
+still resolves in a session, so the extension's discovery merges with the file rather than replacing
+it.
+
+One caveat, measured: `omp models uberllm` lists only what the config file declares. Extension
+registrations happen during session setup, so the listing undercounts by every catalog row that
+arrived after the file was generated. Sessions see the union.
 
 ## Use
 
@@ -25,49 +59,49 @@ omp --model uberllm/anthropic/claude-sonnet-5.5
 omp config set modelRoles.default uberllm/deepseek/deepseek-v4.1-flash-1017
 ```
 
-Inside a session, `/model uberllm` opens the provider's list. Every model is selected as
-`uberllm/<catalog id>`, so ids keep their vendor prefix.
+Inside a session, `/model uberllm` opens the provider's list and `/usage` shows the prepaid balance
+(`GET /v1/balance`, account-wide, marked `shared` so two keys of one account are not summed).
 
-## Regenerate
+## Wire
 
-```sh
-python3 scripts/generate.py            # rewrite models.yml from https://api.uberllm.dev/v1/models
-python3 scripts/generate.py --check    # exit 1 when the committed file is stale
-```
-
-The catalog is public, no key needed. `--source catalog.json` reads a saved copy. Output is sorted by
-id, so a regeneration that changes nothing produces no diff.
+One API covers the catalog: every `/v1/models` row lists `/v1/chat/completions`, Claude included, so
+`api: openai-completions` serves all of them. UberLLM also exposes `/v1/messages`, but an extension
+registration cannot force API-key shaping for `anthropic-messages`, and the gateway's own caching
+does not need it — the plugin would only lose tools if it switched.
 
 ## What is left out, and why
 
 | Rows | Example | Reason |
 | --- | --- | --- |
-| 11 tool-free models | `google/gemma-3-27b-it`, `venice/uncensored` | omp always sends tools. Such a model does not refuse: it replies as if it had called them — `google/gemma-3-27b-it` answered "completed successfully by using the bash tool" without a single call. |
-| 5 `:variant` ids | `anthropic/claude-haiku-5.5:batch`, `z-ai/glm-5:web` | omp reads `model:effort` as a thinking-level variant (`deepseek-v4-flash:high`). A colon inside an id would shadow the real row. |
-| 3 decisions-output models | `typesafe/jev-1.14` | Output modality is not text; omp would have to send them as chat. |
+| tool-free models (11) | `google/gemma-3-27b-it`, `venice/uncensored` | omp always sends tools. Such a model does not refuse: `google/gemma-3-27b-it` answered "completed successfully by using the bash tool" without a single call. |
+| `:variant` ids (5) | `anthropic/claude-haiku-5.5:batch`, `z-ai/glm-5:web` | omp reads `model:effort` as a thinking-level variant (`deepseek-v4-flash:high`), so a colon inside an id would shadow the real row. |
+| `decisions`-output models (3) | `typesafe/jev-1.14` | Output modality is not text. |
 | `available: false` rows | — | The gateway refuses them. |
+| rows without limits (3) | — | omp requires a positive `contextWindow` and `maxTokens`. |
 
-Discovery is deliberately not configured: `discovery: {type: openai-models-list, injectV1: false}`
-does list 248 rows with correct limits, but it reports every price as zero and re-adds the `:variant`
-ids. A committed list keeps prices and selection exact.
+## Regenerate
 
-## Notes
+```sh
+python3 scripts/generate.py            # rewrite models.yml and src/catalog.generated.ts
+python3 scripts/generate.py --check    # exit 1 when either file is stale
+```
 
-- One wire API: every catalog row lists `/v1/chat/completions`, Claude included, so a single
-  provider-level `api: openai-completions` covers all of them. UberLLM also serves
-  `/v1/messages`; switching Claude to `anthropic-messages` would buy Anthropic prompt-cache
-  semantics, not model access.
-- `cost` is the **billed** rate per 1M tokens (`prompt`/`completion`/`input_cache_read`/
-  `input_cache_write` × 1e6), not `list_*_usd`. Two catalog rows leak their per-token rate into
-  `*_usd`, so the script prefers the per-token fields. omp's schema requires all four values;
-  a partial `cost` block disables every custom provider with a schema error.
-- Limits come from `context_length` / `max_output_tokens`; a row that has neither omits the field
-  instead of guessing 128K.
+The catalog is public, no key needed. `--source catalog.json` reads a saved copy. Both artifacts are
+sorted by id, so a regeneration that changes nothing produces no diff. `src/catalog.ts` carries the
+same filter and price conversion for live discovery — change both when the catalog schema moves.
+
+## Costs
+
+`cost` is the **billed** rate per 1M tokens (`prompt`/`completion`/`input_cache_read`/
+`input_cache_write` × 1e6), not `list_*_usd`. Two catalog rows leak their per-token rate into
+`*_usd`, so both the script and the extension prefer the per-token fields. omp's schema requires all
+four values; a partial `cost` block disables every custom provider with a schema error.
 
 ## Verify
 
 ```sh
-omp models uberllm          # 225 models, context/max-out/thinking/images per row
+python3 scripts/generate.py --check
+omp plugin doctor omp-uberllm
 omp -p --no-session --model uberllm/deepseek/deepseek-v4.1-flash-1017 "Reply with exactly: ok"
 ```
 

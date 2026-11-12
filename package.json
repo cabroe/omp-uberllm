@@ -1,0 +1,11 @@
+{
+  "name": "omp-uberllm",
+  "version": "0.2.0",
+  "description": "UberLLM as an omp model provider: live catalog, billed prices, prepaid balance",
+  "license": "MIT",
+  "type": "module",
+  "omp": {
+    "extensions": ["./src/main.ts"]
+  },
+  "files": ["src", "models.yml", "README.md", "LICENSE"]
+}
